@@ -732,21 +732,16 @@ function initPlayerControls() {
     if (shuffleAllBtn) {
         shuffleAllBtn.addEventListener("click", () => {
             if (!allMusicTracks.length) return;
-            const shuffled = [...allMusicTracks];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            playbackQueue = [...shuffled];
-            currentQueueIndex = 0;
-            isShuffle = false;
+            playbackQueue = [...allMusicTracks];
+            const startIndex = Math.floor(Math.random() * allMusicTracks.length);
+            isShuffle = true;
+            generateShuffleQueue(startIndex);
             const sBtn = document.querySelector("#player-shuffle");
             if (sBtn) {
-                sBtn.classList.remove("active");
-                sBtn.textContent = "SHUF";
-                sBtn.title = "Shuffle (Off)";
+                sBtn.classList.add("active");
+                sBtn.textContent = "SHUF (ON)";
+                sBtn.title = "Shuffle (On)";
             }
-            shuffleQueue = [];
             playCurrentTrack();
         });
     }
