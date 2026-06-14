@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>T Swerve | Homebase</title>
     <meta name="description" content="The official homebase for T Swerve">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 
 <body>
@@ -22,6 +22,66 @@
     </header>
 
     <main>
+        <!-- T SWERV3 Countdown Section -->
+        <section id="tswerv3-countdown" class="countdown-section" aria-label="T SWERV3 album countdown">
+            <div class="countdown-bg-blur" aria-hidden="true"></div>
+            <div class="countdown-inner">
+                <div class="countdown-art-col">
+                    <img src="assets/tswerv3-cover.jpeg" alt="T SWERV3 album cover art" class="countdown-art">
+                </div>
+                <div class="countdown-info-col">
+                    <p class="countdown-eyebrow">New Album — Dropping</p>
+                    <h2 class="countdown-title">T SWERV3</h2>
+                    <p class="countdown-subtitle">Available on all platforms September 11</p>
+
+                    <div class="countdown-units" id="countdown-units">
+                        <div class="countdown-unit">
+                            <span id="cd-days">00</span>
+                            <label>Days</label>
+                        </div>
+                        <div class="countdown-colon" aria-hidden="true">:</div>
+                        <div class="countdown-unit">
+                            <span id="cd-hours">00</span>
+                            <label>Hours</label>
+                        </div>
+                        <div class="countdown-colon" aria-hidden="true">:</div>
+                        <div class="countdown-unit">
+                            <span id="cd-minutes">00</span>
+                            <label>Min</label>
+                        </div>
+                        <div class="countdown-colon" aria-hidden="true">:</div>
+                        <div class="countdown-unit">
+                            <span id="cd-seconds">00</span>
+                            <label>Sec</label>
+                        </div>
+                    </div>
+
+                    <div class="countdown-released-msg" id="countdown-released" hidden>
+                        <span>🔥 OUT NOW — Stream T SWERV3</span>
+                    </div>
+
+                    <!-- Daily Teaser Mini Player -->
+                    <div class="countdown-player-card" id="countdown-player-card">
+                        <div class="countdown-player-header">
+                            <span class="countdown-player-label">🎵 Daily Teaser Track</span>
+                            <span class="countdown-player-track-name" id="cd-track-name">Loading...</span>
+                        </div>
+                        <audio id="countdown-audio" preload="metadata"></audio>
+                        <div class="countdown-player-controls">
+                            <button id="cd-play-pause" class="cd-play-btn" type="button" aria-label="Play teaser track">▶</button>
+                            <div class="countdown-progress-wrap">
+                                <input type="range" id="cd-progress" min="0" max="100" value="0" class="cd-progress-bar" aria-label="Teaser track progress">
+                                <div class="cd-time-row">
+                                    <span id="cd-current-time">0:00</span>
+                                    <span id="cd-duration">0:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="hero section-band" id="top">
             <div class="hero-copy">
                 <p class="eyebrow">FAKE Entertainment presents</p>
@@ -84,7 +144,7 @@
         <p>&copy; <span id="year"></span> T Swerve | FAKE Entertainment. All rights reserved.</p>
     </footer>
 
-    <script src="site.js?v=5"></script>
+    <script src="site.js?v=6"></script>
 </body>
 
 </html>

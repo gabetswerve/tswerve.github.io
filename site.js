@@ -90,6 +90,7 @@ function initPage() {
 
     initInfoModal();
     loadMusicLibrary();
+    initCountdown();
 
     const listenBtn = document.querySelector(".epk-listen-btn");
     if (listenBtn) {
@@ -1120,6 +1121,171 @@ function formatTime(secs) {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
+// ─────────────────────────────────────────────
+// T SWERV3 Countdown + Daily Teaser Player
+// ─────────────────────────────────────────────
 
+const TSWERV3_TRACKS = [
+    { title: "T SWERVE",                  file: "T SWERVE.mp3"                  },
+    { title: "FLEX",                       file: "FLEX.mp3"                       },
+    { title: "CROWN",                      file: "CROWN.m4a"                      },
+    { title: "SPACE",                      file: "SPACE.mp3"                      },
+    { title: "ON DA FLOOR (FREESTYLE)",    file: "ON DA FLOOR (FREESTYLE).mp3"    },
+    { title: "CAN'T RELAX",               file: "CAN'T RELAX.mp3"               },
+    { title: "EIFFEL TOWER",              file: "EIFFEL TOWER.mp3"              },
+    { title: "RIDE",                       file: "RIDE.mp3"                       },
+    { title: "TRICK OR TREAT",            file: "TRICK OR TREAT.m4a"            },
+    { title: "IDK",                        file: "IDK.mp3"                        },
+    { title: "PAST",                       file: "PAST.mp3"                       },
+    { title: "SEARCHING FOR",             file: "SEARCHING FOR.m4a"             },
+    { title: "PAID",                       file: "PAID.m4a"                       },
+    { title: "GOT IT BAD",               file: "GOT IT BAD.mp3"               },
+    { title: "ON MY",                      file: "ON MY.mp3"                      }
+];
 
+const TSWERV3_ALBUM_PATH = "Music/Albums/T SWERV3/";
 
+// Pick a consistent random track per calendar day using a date-based hash
+function getDailyTeaserTrack() {
+    const dateKey = new Date().toDateString(); // e.g. "Sun Jun 14 2026"
+    let hash = 0;
+    for (let i = 0; i < dateKey.length; i++) {
+        hash = ((hash << 5) - hash) + dateKey.charCodeAt(i);
+        hash |= 0;
+    }
+    const index = Math.abs(hash) % TSWERV3_TRACKS.length;
+    return TSWERV3_TRACKS[index];
+}
+
+// Build the audio URL, handling localhost vs live site
+function getTeaserAudioUrl(filename) {
+    const encoded = filename.split(" ").map(encodeURIComponent).join("%20");
+    return `${TSWERV3_ALBUM_PATH}${encoded}`;
+}
+
+let countdownInterval = null;
+
+function initCountdown() {
+    const cdSection = document.querySelector("#tswerv3-countdown");
+    if (!cdSection) return;
+
+    // Target: September 11, 2026 at 12:00 AM EDT (UTC-4)
+    const releaseDate = new Date("2026-09-11T04:00:00Z");
+    const now = new Date();
+
+    const daysEl    = document.querySelector("#cd-days");
+    const hoursEl   = document.querySelector("#cd-hours");
+    const minutesEl = document.querySelector("#cd-minutes");
+    const secondsEl = document.querySelector("#cd-seconds");
+    const unitsEl   = document.querySelector("#countdown-units");
+    const releasedEl = document.querySelector("#countdown-released");
+    const playerCard = document.querySelector("#countdown-player-card");
+
+    // If already released, show released state and hide player
+    if (now >= releaseDate) {
+        if (unitsEl) unitsEl.hidden = true;
+        if (releasedEl) releasedEl.hidden = false;
+        if (playerCard) playerCard.hidden = true;
+        return;
+    }
+
+    // Tick function — updates the four countdown cells every second
+    function tick() {
+        const diff = releaseDate - new Date();
+        if (diff <= 0) {
+            clearInterval(countdownInterval);
+            if (unitsEl) unitsEl.hidden = true;
+            if (releasedEl) releasedEl.hidden = false;
+            if (playerCard) playerCard.hidden = true;
+            return;
+        }
+
+        const totalSecs = Math.floor(diff / 1000);
+        const d = Math.floor(totalSecs / 86400);
+        const h = Math.floor((totalSecs % 86400) / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+
+        function setAndTick(el, value) {
+            if (!el) return;
+            const str = String(value).padStart(2, "0");
+            if (el.textContent !== str) {
+                el.classList.add("tick");
+                setTimeout(() => el.classList.remove("tick"), 200);
+            }
+            el.textContent = str;
+        }
+
+        setAndTick(daysEl, d);
+        setAndTick(hoursEl, h);
+        setAndTick(minutesEl, m);
+        setAndTick(secondsEl, s);
+    }
+
+    // Clear any existing interval (re-entry from SPA navigation)
+    if (countdownInterval) clearInterval(countdownInterval);
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+
+    // ── Daily Teaser Mini Player ──────────────
+    const cdAudio   = document.querySelector("#countdown-audio");
+    const cdPlayBtn = document.querySelector("#cd-play-pause");
+    const cdProgress = document.querySelector("#cd-progress");
+    const cdCurrentTime = document.querySelector("#cd-current-time");
+    const cdDuration = document.querySelector("#cd-duration");
+    const cdTrackName = document.querySelector("#cd-track-name");
+
+    if (!cdAudio || !cdPlayBtn) return;
+
+    const track = getDailyTeaserTrack();
+    const audioUrl = getTeaserAudioUrl(track.file);
+
+    // Only reload audio if the src changed (prevents re-init on SPA nav)
+    if (!cdAudio.src || !cdAudio.src.includes(encodeURIComponent(track.file).replace(/%20/g, "%20").replace(/%27/g, "'"))) {
+        cdAudio.src = audioUrl;
+    }
+    if (cdTrackName) cdTrackName.textContent = track.title;
+
+    // Play / Pause
+    cdPlayBtn.addEventListener("click", () => {
+        if (cdAudio.paused) {
+            cdAudio.play().catch(() => {});
+        } else {
+            cdAudio.pause();
+        }
+    });
+
+    cdAudio.addEventListener("play", () => {
+        cdPlayBtn.textContent = "⏸";
+        cdPlayBtn.setAttribute("aria-label", "Pause teaser track");
+    });
+
+    cdAudio.addEventListener("pause", () => {
+        cdPlayBtn.textContent = "▶";
+        cdPlayBtn.setAttribute("aria-label", "Play teaser track");
+    });
+
+    // Progress bar — seek
+    if (cdProgress) {
+        cdProgress.addEventListener("input", () => {
+            if (!cdAudio.duration) return;
+            cdAudio.currentTime = (cdProgress.value / 100) * cdAudio.duration;
+        });
+
+        cdAudio.addEventListener("timeupdate", () => {
+            if (!cdAudio.duration) return;
+            cdProgress.value = (cdAudio.currentTime / cdAudio.duration) * 100;
+            if (cdCurrentTime) cdCurrentTime.textContent = formatTime(cdAudio.currentTime);
+        });
+
+        cdAudio.addEventListener("loadedmetadata", () => {
+            if (cdDuration) cdDuration.textContent = formatTime(cdAudio.duration);
+        });
+
+        // Replay when track ends
+        cdAudio.addEventListener("ended", () => {
+            cdAudio.currentTime = 0;
+            cdPlayBtn.textContent = "▶";
+        });
+    }
+}

@@ -2057,7 +2057,312 @@ body.has-floating-player {
     }
 }
 
+/* =============================================
+   T SWERV3 Countdown Section
+   ============================================= */
 
+.countdown-section {
+    position: relative;
+    width: 100%;
+    background: #000;
+    overflow: hidden;
+    padding: 0;
+}
 
+/* Background blurred album art */
+.countdown-bg-blur {
+    position: absolute;
+    inset: 0;
+    background: url('assets/tswerv3-cover.jpeg') center/cover no-repeat;
+    filter: blur(60px) brightness(0.25) saturate(0.6);
+    transform: scale(1.15);
+    z-index: 0;
+}
 
+/* Inner two-column layout */
+.countdown-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 3.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
+
+/* Album art column */
+.countdown-art-col {
+    flex: 0 0 auto;
+}
+
+.countdown-art {
+    width: 280px;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 40px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(255, 215, 0, 0.12);
+    animation: countdown-art-pulse 4s ease-in-out infinite;
+}
+
+@keyframes countdown-art-pulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 40px rgba(0,0,0,0.7), 0 0 60px rgba(255, 215, 0, 0.12); }
+    50%       { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 8px 40px rgba(0,0,0,0.7), 0 0 90px rgba(255, 215, 0, 0.28); }
+}
+
+/* Info column */
+.countdown-info-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.countdown-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #ffd100;
+    margin: 0;
+}
+
+.countdown-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin: 0;
+    line-height: 1;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+}
+
+.countdown-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+/* Countdown units row */
+.countdown-units {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    min-width: 70px;
+    backdrop-filter: blur(6px);
+}
+
+.countdown-unit span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    color: #ffd100;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.countdown-unit span.tick {
+    transform: scale(1.08);
+}
+
+.countdown-unit label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: default;
+}
+
+.countdown-colon {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: rgba(255, 215, 0, 0.5);
+    margin-top: 0.6rem;
+    animation: colon-blink 1s step-end infinite;
+}
+
+@keyframes colon-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+}
+
+/* Released message */
+.countdown-released-msg {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffd100;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 6px;
+    background: rgba(255, 215, 0, 0.08);
+    display: inline-block;
+}
+
+/* Daily teaser mini player card */
+.countdown-player-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 420px;
+}
+
+.countdown-player-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.countdown-player-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.countdown-player-track-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
+.countdown-player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.cd-play-btn {
+    flex: 0 0 auto;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    border: none;
+    background: #ffd100;
+    color: #000;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: sans-serif;
+}
+
+.cd-play-btn:hover {
+    transform: scale(1.1);
+    background: #ffe040;
+}
+
+.countdown-progress-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.cd-progress-bar {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: #ffd100;
+    outline: none;
+}
+
+.cd-progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffd100;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
+.cd-progress-bar::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffd100;
+    cursor: pointer;
+    border: none;
+}
+
+.cd-time-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .countdown-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2.5rem 1.25rem;
+        gap: 2rem;
+    }
+
+    .countdown-art {
+        width: 200px;
+        height: 200px;
+    }
+
+    .countdown-info-col {
+        align-items: center;
+    }
+
+    .countdown-units {
+        justify-content: center;
+    }
+
+    .countdown-unit {
+        min-width: 58px;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .countdown-player-card {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .countdown-title {
+        font-size: clamp(2.2rem, 10vw, 3.5rem);
+    }
+}
 
