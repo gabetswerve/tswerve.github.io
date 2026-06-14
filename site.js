@@ -964,6 +964,63 @@ function initPlayerControls() {
     const muteBtn = document.querySelector("#player-mute");
     const shuffleAllBtn = document.querySelector("#player-shuffle-all");
 
+    const playPauseBtn = document.querySelector("#player-play-pause");
+    const progressBar = document.querySelector("#player-progress");
+    const currentTimeEl = document.querySelector("#player-current-time");
+    const durationEl = document.querySelector("#player-duration");
+
+    if (playPauseBtn && audio) {
+        playPauseBtn.addEventListener("click", () => {
+            if (!audio.src || audio.src === "" || audio.src.endsWith("/") || window.location.href.endsWith(audio.src)) {
+                if (allMusicTracks.length > 0) {
+                    playbackQueue = [...allMusicTracks];
+                    currentQueueIndex = 0;
+                    playCurrentTrack();
+                }
+                return;
+            }
+            if (audio.paused) {
+                audio.play().catch(() => {});
+            } else {
+                audio.pause();
+            }
+        });
+
+        audio.addEventListener("play", () => {
+            playPauseBtn.textContent = "⏸";
+            playPauseBtn.title = "Pause";
+        });
+
+        audio.addEventListener("pause", () => {
+            playPauseBtn.textContent = "▶";
+            playPauseBtn.title = "Play";
+        });
+    }
+
+    if (progressBar && audio) {
+        progressBar.addEventListener("input", () => {
+            if (!audio.duration) return;
+            const newTime = (progressBar.value / 100) * audio.duration;
+            audio.currentTime = newTime;
+        });
+
+        audio.addEventListener("timeupdate", () => {
+            if (!audio.duration) return;
+            const progressPercent = (audio.currentTime / audio.duration) * 100;
+            progressBar.value = progressPercent;
+            if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime);
+        });
+
+        audio.addEventListener("loadedmetadata", () => {
+            if (durationEl) durationEl.textContent = formatTime(audio.duration);
+        });
+        
+        // Safety check if audio is already loaded
+        if (audio.duration && durationEl) {
+            durationEl.textContent = formatTime(audio.duration);
+        }
+    }
+
     if (audio && volumeSlider) {
         audio.volume = volumeSlider.value;
         volumeSlider.addEventListener("input", () => {
@@ -1014,6 +1071,13 @@ function initPlayerControls() {
             playCurrentTrack();
         });
     }
+}
+
+function formatTime(secs) {
+    if (isNaN(secs) || secs === Infinity) return "0:00";
+    const minutes = Math.floor(secs / 60);
+    const seconds = Math.floor(secs % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
 
