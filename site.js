@@ -38,6 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
         audio.addEventListener("ended", playNextTrack);
     }
     initPlayerControls();
+
+    const listenBtn = document.querySelector(".epk-listen-btn");
+    if (listenBtn) {
+        listenBtn.addEventListener("click", () => {
+            playTrackByName("IDFWU");
+        });
+    }
 });
 
 function initInfoModal() {
@@ -622,6 +629,44 @@ function playTrackFromQueue(index) {
     }
 
     playCurrentTrack();
+}
+
+function playTrackByName(trackTitle) {
+    if (!allMusicTracks.length) return;
+
+    // Reset tabs to "All"
+    const tabs = document.querySelector("#music-tabs");
+    if (tabs) {
+        tabs.querySelectorAll("button").forEach(tab => {
+            if (tab.dataset.category === "All") {
+                tab.classList.add("active");
+            } else {
+                tab.classList.remove("active");
+            }
+        });
+    }
+    currentMusicCategory = "All";
+
+    // Clear search
+    const searchInput = document.querySelector("#music-search");
+    if (searchInput) {
+        searchInput.value = "";
+    }
+    currentMusicSearch = "";
+
+    // Re-filter and render
+    filterAndRenderMusic();
+
+    // Find in updated currentTracksInView
+    const index = currentTracksInView.findIndex(t => t.title.toLowerCase() === trackTitle.toLowerCase());
+    if (index !== -1) {
+        playbackQueue = [...currentTracksInView];
+        currentQueueIndex = index;
+        if (isShuffle) {
+            generateShuffleQueue(index);
+        }
+        playCurrentTrack();
+    }
 }
 
 function generateShuffleQueue(startIndex) {
