@@ -1835,6 +1835,131 @@ footer {
     opacity: 0.8;
 }
 
+/* Persistent Floating Player Dock Styles */
+.player-dock.floating-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto; /* override top: 5.5rem */
+    width: 100%;
+    max-width: 100%;
+    background: rgba(18, 17, 22, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 2px solid var(--cyan);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0.8rem 2rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* Specific inner element layout adjustments when floating */
+.player-dock.floating-player .player-track-info {
+    margin-bottom: 0;
+    flex: 1;
+    max-width: 320px;
+}
+
+.player-dock.floating-player #player-art {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+}
+
+.player-dock.floating-player #player-title {
+    font-size: 0.95rem;
+}
+
+.player-dock.floating-player #player-meta {
+    font-size: 0.7rem;
+}
+
+.player-dock.floating-player #main-audio {
+    flex: 2;
+    max-width: 450px;
+    margin-top: 0;
+}
+
+.player-dock.floating-player .player-volume-container {
+    flex: 1;
+    max-width: 180px;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.player-dock.floating-player .player-controls {
+    flex: 1;
+    max-width: 250px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    gap: 0.5rem;
+}
+
+.player-dock.floating-player #player-shuffle-all {
+    display: none !important;
+}
+
+/* Adjust page padding when floating player is present */
+body.has-floating-player {
+    padding-bottom: 6.5rem !important;
+}
+
+/* Media Queries for Mobile Screens */
+@media (max-width: 768px) {
+    .player-dock.floating-player {
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: 0.8rem 1rem;
+    }
+    
+    .player-dock.floating-player .player-track-info {
+        max-width: 100%;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .player-dock.floating-player #main-audio {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .player-dock.floating-player .player-controls {
+        max-width: 100%;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .player-dock.floating-player .player-volume-container {
+        display: none !important; /* Hide volume on mobile to save space */
+    }
+    
+    body.has-floating-player {
+        padding-bottom: 12.5rem !important;
+    }
+}
+
+
 
 
 

@@ -26,18 +26,62 @@ let isShuffle = false;
 let repeatMode = "none"; // "none" | "all" | "one"
 let currentTracksInView = [];
 
-document.addEventListener("DOMContentLoaded", () => {
+let playerDockEl = null;
+
+function ensurePlayerDockCreated() {
+    if (playerDockEl) return playerDockEl;
+
+    playerDockEl = document.createElement("aside");
+    playerDockEl.id = "main-player-dock";
+    playerDockEl.className = "player-dock";
+    playerDockEl.setAttribute("aria-label", "Music player");
+    
+    playerDockEl.innerHTML = `
+        <div class="player-track-info">
+            <img id="player-art" src="" alt="" hidden>
+            <div class="player-text-details">
+                <p class="panel-label">Selected track</p>
+                <h3 id="player-title">No track selected</h3>
+                <p class="muted" id="player-meta">Choose a song.</p>
+            </div>
+        </div>
+        <audio id="main-audio" controls controlsList="nodownload" oncontextmenu="return false;" preload="metadata"></audio>
+        <div class="player-volume-container" style="display: flex; align-items: center; gap: 0.6rem; margin-top: 0.6rem; padding-top: 0.2rem; width: 100%;">
+            <button id="player-mute" class="control-btn" type="button" title="Mute/Unmute" style="min-width: 2.2rem; padding: 0.4rem; font-size: 0.9rem;">🔊</button>
+            <input type="range" id="player-volume" min="0" max="1" step="0.05" value="1" class="player-volume-slider" title="Volume" style="flex: 1; -webkit-appearance: none; appearance: none; height: 6px; min-height: auto; width: 0; padding: 0; border: none; border-radius: 3px; background: var(--line); outline: none; transition: background 0.3s; box-shadow: none;">
+        </div>
+        <div class="player-controls">
+            <button id="player-shuffle" class="control-btn" title="Shuffle (Off)" type="button">SHUF</button>
+            <button id="player-prev" class="control-btn" title="Previous Track" type="button">⏮</button>
+            <button id="player-next" class="control-btn" title="Next Track" type="button">⏭</button>
+            <button id="player-repeat" class="control-btn" title="Repeat (Off)" type="button">REP</button>
+        </div>
+        <button id="player-shuffle-all" class="control-btn" type="button" style="width: 100%; margin-top: 0.6rem; min-height: 2.2rem; font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--cyan); background: rgba(0, 255, 255, 0.05); color: var(--cyan);">Shuffle All</button>
+    `;
+
+    return playerDockEl;
+}
+
+function positionPlayerDock() {
+    const slot = document.querySelector("#player-dock-slot");
+    const player = ensurePlayerDockCreated();
+    if (slot) {
+        slot.appendChild(player);
+        player.classList.remove("floating-player");
+        document.body.classList.remove("has-floating-player");
+    } else {
+        document.body.appendChild(player);
+        player.classList.add("floating-player");
+        document.body.classList.add("has-floating-player");
+    }
+}
+
+function initPage() {
     const year = document.querySelector("#year");
     if (year) year.textContent = new Date().getFullYear();
 
     initInfoModal();
     loadMusicLibrary();
-
-    const audio = document.querySelector("#main-audio");
-    if (audio) {
-        audio.addEventListener("ended", playNextTrack);
-    }
-    initPlayerControls();
 
     const listenBtn = document.querySelector(".epk-listen-btn");
     if (listenBtn) {
@@ -45,6 +89,112 @@ document.addEventListener("DOMContentLoaded", () => {
             playTrackByName("IDFWU");
         });
     }
+}
+
+async function loadPageContent(url) {
+    try {
+        const fetchUrl = url.split("#")[0] || "index.html";
+        const response = await fetch(fetchUrl);
+        if (!response.ok) throw new Error("Failed to load page");
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, "text/html");
+
+        document.body.className = doc.body.className;
+
+        const newMain = doc.querySelector("main");
+        const currentMain = document.querySelector("main");
+        if (newMain && currentMain) {
+            currentMain.outerHTML = newMain.outerHTML;
+        }
+
+        const newHeader = doc.querySelector("header.site-header");
+        const currentHeader = document.querySelector("header.site-header");
+        if (newHeader && currentHeader) {
+            currentHeader.innerHTML = newHeader.innerHTML;
+        }
+
+        const newFooter = doc.querySelector("footer");
+        const currentFooter = document.querySelector("footer");
+        if (newFooter && currentFooter) {
+            currentFooter.innerHTML = newFooter.innerHTML;
+        }
+
+        document.title = doc.title;
+
+        const newDesc = doc.querySelector('meta[name="description"]');
+        const currentDesc = document.querySelector('meta[name="description"]');
+        if (newDesc && currentDesc) {
+            currentDesc.setAttribute("content", newDesc.getAttribute("content"));
+        }
+
+        positionPlayerDock();
+        initPage();
+
+        const hashIndex = url.indexOf("#");
+        if (hashIndex !== -1) {
+            const hash = url.substring(hashIndex);
+            const targetEl = document.querySelector(hash);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: "smooth" });
+                return;
+            }
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+    } catch (err) {
+        console.error("Error navigating page:", err);
+        window.location.href = url;
+    }
+}
+
+function navigateToPage(url) {
+    history.pushState(null, '', url);
+    loadPageContent(url);
+}
+
+function initSPARouter() {
+    window.addEventListener("popstate", () => {
+        loadPageContent(window.location.pathname + window.location.hash);
+    });
+
+    document.addEventListener("click", (event) => {
+        const anchor = event.target.closest("a");
+        if (!anchor) return;
+
+        if (anchor.hasAttribute("download")) return;
+
+        const href = anchor.getAttribute("href");
+        if (!href) return;
+
+        try {
+            const url = new URL(href, window.location.href);
+            if (url.origin !== window.location.origin) return;
+
+            if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+            if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) {
+                return;
+            }
+
+            event.preventDefault();
+            navigateToPage(url.pathname + url.search + url.hash);
+        } catch (e) {
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    ensurePlayerDockCreated();
+    positionPlayerDock();
+
+    const audio = document.querySelector("#main-audio");
+    if (audio) {
+        audio.addEventListener("ended", playNextTrack);
+    }
+    initPlayerControls();
+    initSPARouter();
+    initPage();
 });
 
 function initInfoModal() {

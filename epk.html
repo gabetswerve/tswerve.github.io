@@ -112,25 +112,7 @@
             <div class="tabs" id="music-tabs" role="tablist" aria-label="Music categories"></div>
             <div class="music-layout">
                 <div class="release-grid" id="music-library" data-limit="6" aria-live="polite"></div>
-                <aside class="player-dock" aria-label="Music player">
-                    <div class="player-track-info">
-                        <img id="player-art" src="" alt="" hidden>
-                        <div class="player-text-details">
-                            <p class="panel-label">Selected track</p>
-                            <h3 id="player-title">No track selected</h3>
-                            <p class="muted" id="player-meta">Choose a song.</p>
-                        </div>
-                    </div>
-                    <audio id="main-audio" controls controlsList="nodownload" oncontextmenu="return false;"
-                        preload="metadata"></audio>
-                    <div class="player-controls">
-                        <button id="player-shuffle" class="control-btn" title="Shuffle (Off)"
-                            type="button">SHUF</button>
-                        <button id="player-prev" class="control-btn" title="Previous Track" type="button">⏮</button>
-                        <button id="player-next" class="control-btn" title="Next Track" type="button">⏭</button>
-                        <button id="player-repeat" class="control-btn" title="Repeat (Off)" type="button">REP</button>
-                    </div>
-                </aside>
+                <div id="player-dock-slot"></div>
             </div>
         </section>
 
