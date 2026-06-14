@@ -33,7 +33,7 @@ function ensurePlayerDockCreated() {
 
     playerDockEl = document.createElement("aside");
     playerDockEl.id = "main-player-dock";
-    playerDockEl.className = "player-dock";
+    playerDockEl.className = "player-dock floating-player hidden-player";
     playerDockEl.setAttribute("aria-label", "Music player");
     
     playerDockEl.innerHTML = `
@@ -45,17 +45,30 @@ function ensurePlayerDockCreated() {
                 <p class="muted" id="player-meta">Choose a song.</p>
             </div>
         </div>
-        <audio id="main-audio" controls controlsList="nodownload" oncontextmenu="return false;" preload="metadata"></audio>
-        <div class="player-volume-container" style="display: flex; align-items: center; gap: 0.6rem; margin-top: 0.6rem; padding-top: 0.2rem; width: 100%;">
-            <button id="player-mute" class="control-btn" type="button" title="Mute/Unmute" style="min-width: 2.2rem; padding: 0.4rem; font-size: 0.9rem;">🔊</button>
-            <input type="range" id="player-volume" min="0" max="1" step="0.05" value="1" class="player-volume-slider" title="Volume" style="flex: 1; -webkit-appearance: none; appearance: none; height: 6px; min-height: auto; width: 0; padding: 0; border: none; border-radius: 3px; background: var(--line); outline: none; transition: background 0.3s; box-shadow: none;">
+        
+        <audio id="main-audio" preload="metadata"></audio>
+        
+        <div class="player-center-controls">
+            <div class="player-controls">
+                <button id="player-shuffle" class="control-btn" title="Shuffle (Off)" type="button">SHUF</button>
+                <button id="player-prev" class="control-btn" title="Previous Track" type="button">⏮</button>
+                <button id="player-play-pause" class="control-btn" title="Play" type="button" style="min-width: 2.5rem; font-size: 1rem;">▶</button>
+                <button id="player-next" class="control-btn" title="Next Track" type="button">⏭</button>
+                <button id="player-repeat" class="control-btn" title="Repeat (Off)" type="button">REP</button>
+                <button id="player-shuffle-all" class="control-btn" type="button" style="font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--cyan); background: rgba(0, 255, 255, 0.05); color: var(--cyan);">Shuffle All</button>
+            </div>
+            <div class="player-progress-container">
+                <span id="player-current-time">0:00</span>
+                <input type="range" id="player-progress" min="0" max="100" value="0" class="player-progress-slider" title="Seek">
+                <span id="player-duration">0:00</span>
+            </div>
         </div>
-        <div class="player-controls">
-            <button id="player-shuffle" class="control-btn" title="Shuffle (Off)" type="button">SHUF</button>
-            <button id="player-prev" class="control-btn" title="Previous Track" type="button">⏮</button>
-            <button id="player-next" class="control-btn" title="Next Track" type="button">⏭</button>
-            <button id="player-repeat" class="control-btn" title="Repeat (Off)" type="button">REP</button>
-            <button id="player-shuffle-all" class="control-btn" type="button" style="font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--cyan); background: rgba(0, 255, 255, 0.05); color: var(--cyan);">Shuffle All</button>
+        
+        <div class="player-right-controls">
+            <div class="player-volume-container">
+                <button id="player-mute" class="control-btn" type="button" title="Mute/Unmute" style="min-width: 2.2rem; padding: 0.4rem; font-size: 0.9rem;">🔊</button>
+                <input type="range" id="player-volume" min="0" max="1" step="0.05" value="1" class="player-volume-slider" title="Volume">
+            </div>
         </div>
     `;
 
@@ -66,7 +79,9 @@ function positionPlayerDock() {
     const player = ensurePlayerDockCreated();
     document.body.appendChild(player);
     player.classList.add("floating-player");
-    document.body.classList.add("has-floating-player");
+    if (!player.classList.contains("hidden-player")) {
+        document.body.classList.add("has-floating-player");
+    }
 }
 
 function initPage() {
@@ -754,6 +769,13 @@ function setPlayerTrack(track) {
 
     audio.src = track.audioUrl;
     audio.play().catch(() => { });
+
+    const player = document.querySelector("#main-player-dock");
+    if (player) {
+        player.classList.remove("hidden-player");
+        document.body.classList.add("has-floating-player");
+    }
+
     if (title) title.textContent = track.title;
     if (meta) meta.textContent = [track.artist, track.album, track.category].filter(Boolean).join(" / ");
     if (art && track.coverUrl) {
