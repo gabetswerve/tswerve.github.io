@@ -1807,4 +1807,18 @@ footer {
     }
 }
 
+/* EPK Video Grid */
+.epk-video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.epk-video-grid .embed-shell {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+}
+
+
 
