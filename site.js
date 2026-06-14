@@ -269,6 +269,57 @@ async function loadMusicManifest() {
     }
 }
 
+function sortTracksChronologically(tracksList) {
+    const singles = tracksList.filter(t => t.category === "Singles" || t.category === "Features");
+    const folders = tracksList.filter(t => t.category !== "Singles" && t.category !== "Features");
+
+    const sortByReleaseDate = (a, b) => {
+        const yearA = a.year || (a.date ? a.date.split('-')[0] : "");
+        const yearB = b.year || (b.date ? b.date.split('-')[0] : "");
+        if (yearA !== yearB) {
+            return yearB.localeCompare(yearA);
+        }
+        return b.date.localeCompare(a.date);
+    };
+
+    singles.sort(sortByReleaseDate);
+
+    const releaseGroups = new Map();
+    folders.forEach(t => {
+        const releaseName = releaseNameFromPath(t);
+        const key = `${t.category}-${releaseName}`;
+        if (!releaseGroups.has(key)) {
+            releaseGroups.set(key, []);
+        }
+        releaseGroups.get(key).push(t);
+    });
+
+    const folderGroups = [...releaseGroups.values()].map(groupTracks => {
+        const groupDates = groupTracks.map(t => t.date).filter(Boolean);
+        const latestDate = groupDates.length > 0 ? [...groupDates].sort().reverse()[0] : "";
+        const groupYear = groupTracks.find(t => t.year)?.year || "";
+        
+        groupTracks.sort((a, b) => {
+            const numA = Number(a.trackNumber || 0);
+            const numB = Number(b.trackNumber || 0);
+            if (numA !== numB) return numA - numB;
+            return a.title.localeCompare(b.title);
+        });
+
+        return {
+            date: latestDate,
+            year: groupYear,
+            tracks: groupTracks
+        };
+    });
+
+    folderGroups.sort(sortByReleaseDate);
+
+    const sortedFoldersTracks = folderGroups.map(g => g.tracks).flat();
+
+    return [...singles, ...sortedFoldersTracks];
+}
+
 async function loadMusicLibrary() {
     const library = document.querySelector("#music-library");
     if (!library) return;
@@ -290,7 +341,7 @@ async function loadMusicLibrary() {
         return;
     }
 
-    allMusicTracks = tracks;
+    allMusicTracks = sortTracksChronologically(tracks);
     setupTabs();
     setupSearch();
     filterAndRenderMusic();
@@ -443,7 +494,31 @@ function renderTracks(tracks, container) {
     container.querySelectorAll("[data-track-index]").forEach(button => {
         button.addEventListener("click", () => {
             const index = Number(button.dataset.trackIndex);
-            playTrackFromQueue(index);
+            const track = tracks[index];
+
+            if (track.category !== "Singles" && track.category !== "Features") {
+                const releaseName = releaseNameFromPath(track);
+                const albumTracks = allMusicTracks.filter(t => t.category === track.category && releaseNameFromPath(t) === releaseName);
+                playbackQueue = [...albumTracks];
+                const queueIndex = playbackQueue.findIndex(t => t.path === track.path);
+
+                if (isShuffle) {
+                    currentQueueIndex = queueIndex;
+                    generateShuffleQueue(queueIndex);
+                } else {
+                    currentQueueIndex = queueIndex;
+                }
+                playCurrentTrack();
+            } else {
+                playbackQueue = [...tracks];
+                if (isShuffle) {
+                    currentQueueIndex = index;
+                    generateShuffleQueue(index);
+                } else {
+                    currentQueueIndex = index;
+                }
+                playCurrentTrack();
+            }
         });
     });
 
