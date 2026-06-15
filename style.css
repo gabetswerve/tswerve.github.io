@@ -542,6 +542,10 @@ audio {
     order: 1;
     display: flex;
     gap: 0.4rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
     margin-top: 0 !important;
     margin-bottom: 0.3rem;
 }
@@ -551,6 +555,7 @@ audio {
     padding: 0.2rem 0.6rem;
     font-size: 0.7rem;
     letter-spacing: 0.08em;
+
 }
 
 .project-card h2 {
