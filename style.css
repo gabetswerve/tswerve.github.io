@@ -2175,6 +2175,7 @@ footer {
     transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
     transform: translateY(0);
     opacity: 1;
+    overflow: visible;
 }
 
 .player-dock.floating-player.hidden-player {
@@ -2400,6 +2401,13 @@ body.player-is-collapsed {
 .epk-page .player-dock.floating-player {
     border-top: 2px solid #ffd100 !important;
 }
+.epk-page .player-restore-tab {
+    border-color: #ffd100 !important;
+    color: #ffd100 !important;
+}
+.epk-page .player-restore-tab:hover {
+    background: rgba(255, 209, 0, 0.12) !important;
+}
 
 .player-dock.floating-player .player-right-controls {
     flex: 1;
@@ -2451,6 +2459,7 @@ body.has-floating-player {
         margin-bottom: 0.35rem;
         gap: 0.6rem;
         align-items: center;
+        padding-right: 2.2rem; /* Make room for the absolute positioned collapse button */
     }
 
     .player-dock.floating-player #player-art {
@@ -2517,9 +2526,36 @@ body.has-floating-player {
         display: none !important; /* hide volume on mobile */
     }
 
-    /* Also hide the collapse button on very small screens so more room for info */
+    /* Reposition collapse btn as a clean floating circular button in the top-right */
     .player-dock.floating-player .player-collapse-btn {
-        display: none;
+        display: flex;
+        position: absolute;
+        top: 0.7rem;
+        right: 0.9rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.72rem;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .player-dock.floating-player .player-collapse-btn:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+    }
+
+    .player-dock.floating-player .player-collapse-btn:active {
+        transform: scale(0.95);
     }
 
     body.has-floating-player {
