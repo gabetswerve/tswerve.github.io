@@ -604,32 +604,28 @@ async function loadMusicLibrary() {
     setupSearch();
     filterAndRenderMusic();
 
-    // Find the latest drop based on date (excluding future releases based on EST/EDT)
+    // Find the latest drop based on date (pinned to IDFWU until June 19, 2026 12 AM EST, then switches to FEEL and stays on FEEL)
     let latestTrack = null;
     if (tracks.length > 0) {
         const getReleaseTimeEST = (dateStr) => {
             if (!dateStr) return 0;
             const month = parseInt(dateStr.substring(5, 7), 10);
-            // Eastern Daylight Time (EDT) is UTC-4 (approx. April to October)
-            // Eastern Standard Time (EST) is UTC-5 (approx. November to March)
             const offset = (month >= 4 && month <= 10) ? "-04:00" : "-05:00";
             return Date.parse(`${dateStr}T00:00:00${offset}`);
         };
 
         const nowTime = new Date().getTime();
-        const releasedTracks = tracks.filter(track => {
-            const releaseTime = getReleaseTimeEST(track.date);
-            return releaseTime <= nowTime;
-        });
+        const feelReleaseTime = getReleaseTimeEST("2026-06-19");
 
-        if (releasedTracks.length > 0) {
-            const sortedByDate = [...releasedTracks].sort((a, b) => {
-                const timeA = getReleaseTimeEST(a.date);
-                const timeB = getReleaseTimeEST(b.date);
-                return timeB - timeA;
-            });
-            latestTrack = sortedByDate[0];
-        } else {
+        if (nowTime >= feelReleaseTime) {
+            latestTrack = tracks.find(track => track.title === "FEEL");
+        }
+
+        if (!latestTrack) {
+            latestTrack = tracks.find(track => track.title === "IDFWU");
+        }
+
+        if (!latestTrack) {
             latestTrack = tracks[0];
         }
     }
