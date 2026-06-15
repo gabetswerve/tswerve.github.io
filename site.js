@@ -41,7 +41,7 @@ function ensurePlayerDockCreated() {
             <img id="player-art" src="" alt="" hidden>
             <div class="player-text-details">
                 <p class="panel-label">Selected track</p>
-                <h3 id="player-title">No track selected</h3>
+                <button id="player-title" class="player-title-btn" type="button" title="Go to song in music section" aria-label="Go to song">No track selected</button>
                 <p class="muted" id="player-meta">Choose a song.</p>
             </div>
         </div>
@@ -70,6 +70,8 @@ function ensurePlayerDockCreated() {
                 <input type="range" id="player-volume" min="0" max="1" step="0.05" value="1" class="player-volume-slider" title="Volume">
             </div>
         </div>
+
+        <button id="player-collapse-btn" class="player-collapse-btn" type="button" title="Hide player" aria-label="Hide music player">▼</button>
     `;
 
     return playerDockEl;
@@ -202,9 +204,72 @@ document.addEventListener("DOMContentLoaded", () => {
         audio.addEventListener("ended", playNextTrack);
     }
     initPlayerControls();
+    initPlayerToggle();
     initSPARouter();
     initPage();
 });
+
+function initPlayerToggle() {
+    // Create the persistent "bring back" tab that appears when the player is hidden
+    if (!document.querySelector("#player-restore-tab")) {
+        const tab = document.createElement("button");
+        tab.id = "player-restore-tab";
+        tab.className = "player-restore-tab";
+        tab.type = "button";
+        tab.setAttribute("aria-label", "Show music player");
+        tab.innerHTML = `<span class="player-restore-icon">🎵</span><span class="player-restore-label">Player</span> ▲`;
+        document.body.appendChild(tab);
+        tab.addEventListener("click", showPlayer);
+    }
+
+    wireCollapseButton();
+
+    // Restore saved collapsed state
+    if (localStorage.getItem("playerCollapsed") === "true") {
+        collapsePlayer(false); // false = no animation on first load
+    }
+}
+
+function wireCollapseButton() {
+    const btn = document.querySelector("#player-collapse-btn");
+    if (btn && !btn._wired) {
+        btn._wired = true;
+        btn.addEventListener("click", () => collapsePlayer(true));
+    }
+}
+
+function collapsePlayer(animate) {
+    const player = document.querySelector("#main-player-dock");
+    const tab = document.querySelector("#player-restore-tab");
+    if (!player) return;
+
+    if (!animate) player.style.transition = "none";
+    player.classList.add("player-collapsed");
+    document.body.classList.remove("has-floating-player");
+    document.body.classList.add("player-is-collapsed");
+    if (tab) tab.classList.add("visible");
+    localStorage.setItem("playerCollapsed", "true");
+
+    if (!animate) {
+        // Force reflow then restore transition
+        player.getBoundingClientRect();
+        player.style.transition = "";
+    }
+}
+
+function showPlayer() {
+    const player = document.querySelector("#main-player-dock");
+    const tab = document.querySelector("#player-restore-tab");
+    if (!player) return;
+
+    player.classList.remove("player-collapsed");
+    if (!player.classList.contains("hidden-player")) {
+        document.body.classList.add("has-floating-player");
+    }
+    document.body.classList.remove("player-is-collapsed");
+    if (tab) tab.classList.remove("visible");
+    localStorage.setItem("playerCollapsed", "false");
+}
 
 function initInfoModal() {
     if (document.querySelector("#info-modal-overlay")) return;
@@ -729,7 +794,7 @@ function renderSingleTrackCard(track, hasDockedPlayer) {
     const metaParts = [track.artist, track.album, track.category ? `${track.category}${track.year ? ` (${track.year})` : ""}` : track.year].filter(Boolean);
     const fileName = track.audioUrl.split("/").pop();
     return `
-        <article class="release-card">
+        <article class="release-card" data-track-path="${escapeHtml(track.path)}">
             ${track.coverUrl ? `<img src="${track.coverUrl}" alt="${escapeHtml(track.title)} cover art">` : ""}
             <div class="card-body">
                 <h3>${escapeHtml(track.title)}</h3>
@@ -748,7 +813,7 @@ function renderReleaseFolder(group, hasDockedPlayer) {
     const groupYear = group.tracks.find(t => t.year)?.year || group.tracks.find(t => t.date && /\b\d{4}\b/.test(t.date))?.date.match(/\b\d{4}\b/)[0];
     const metaParts = [group.category ? `${group.category}${groupYear ? ` (${groupYear})` : ""}` : groupYear, `${group.tracks.length} song${group.tracks.length === 1 ? "" : "s"}`].filter(Boolean);
     return `
-        <details class="music-folder">
+        <details class="music-folder" data-release-title="${escapeHtml(group.title)}">
             <summary>
                 ${group.coverUrl ? `<img src="${group.coverUrl}" alt="${escapeHtml(group.title)} cover art">` : `<span class="folder-art"></span>`}
                 <span class="folder-copy">
@@ -764,13 +829,13 @@ function renderReleaseFolder(group, hasDockedPlayer) {
                 ${group.tracks.map(track => {
                     const fileName = track.audioUrl.split("/").pop();
                     return `
-                    <div class="folder-track-row">
+                    <div class="folder-track-row" data-track-path="${escapeHtml(track.path)}">
                         <span>
                             <strong>${escapeHtml(track.title)}</strong>
                             <small>${escapeHtml(track.artist || "T Swerve")}</small>
                         </span>
                         <div class="folder-track-btns">
-                            ${hasDockedPlayer ? `<button class="button primary" type="button" data-track-index="${track.originalIndex}">Play</button>` : `<audio controls controlsList="nodownload" oncontextmenu="return false;" preload="metadata" src="${track.audioUrl}"></audio>`}
+                            ${hasDockedPlayer ? `<button class="button primary" type="button" data-track-index="${track.originalIndex}" data-track-path="${escapeHtml(track.path)}">Play</button>` : `<audio controls controlsList="nodownload" oncontextmenu="return false;" preload="metadata" src="${track.audioUrl}"></audio>`}
                             <a class="button download-btn" href="${track.audioUrl}" download="${fileName}" aria-label="Download ${escapeHtml(track.title)}">⬇</a>
                         </div>
                     </div>
@@ -801,6 +866,10 @@ function setPlayerTrack(track) {
     const player = document.querySelector("#main-player-dock");
     if (player) {
         player.classList.remove("hidden-player");
+        // If the player was collapsed, bring it back when a new track is played
+        if (player.classList.contains("player-collapsed")) {
+            showPlayer();
+        }
         document.body.classList.add("has-floating-player");
     }
 
@@ -811,6 +880,120 @@ function setPlayerTrack(track) {
         art.alt = `${track.title} cover art`;
         art.hidden = false;
     }
+
+    // For album/EP tracks, expand the folder and highlight the row
+    if (track.category !== "Singles" && track.category !== "Features") {
+        expandFolderForTrack(track);
+    } else {
+        // Clear any existing now-playing highlights
+        clearNowPlayingHighlight();
+    }
+}
+
+/**
+ * Clears the now-playing highlight from all track rows.
+ */
+function clearNowPlayingHighlight() {
+    document.querySelectorAll(".folder-track-row.now-playing").forEach(row => {
+        row.classList.remove("now-playing");
+    });
+}
+
+/**
+ * For an album/EP track: open its <details> folder in the library,
+ * highlight the specific track row, and scroll it into view.
+ */
+function expandFolderForTrack(track) {
+    clearNowPlayingHighlight();
+
+    const library = document.querySelector("#music-library");
+    if (!library || !track.path) return;
+
+    // Find the <details> that contains this track (match by data-track-path on the row)
+    const trackRow = library.querySelector(`.folder-track-row[data-track-path="${CSS.escape(track.path)}"]`);
+    if (!trackRow) return;
+
+    const folder = trackRow.closest("details.music-folder");
+    if (!folder) return;
+
+    // Open the folder
+    folder.open = true;
+
+    // Highlight the row
+    trackRow.classList.add("now-playing");
+
+    // Smooth scroll the folder into view (with a small delay to let the open animation settle)
+    setTimeout(() => {
+        trackRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 80);
+}
+
+/**
+ * Gets the track object that is currently loaded in the player.
+ */
+function getCurrentTrack() {
+    if (playbackQueue.length === 0) return null;
+    let idx = currentQueueIndex;
+    if (isShuffle && shuffleQueue.length > 0) {
+        idx = shuffleQueue[currentQueueIndex];
+    }
+    if (idx < 0 || idx >= playbackQueue.length) return null;
+    return playbackQueue[idx];
+}
+
+/**
+ * When the player title is clicked: navigate to #music, switch to the
+ * right tab, and either expand the album folder or scroll to the single card.
+ */
+function navigateToCurrentTrack() {
+    const track = getCurrentTrack();
+    if (!track) return;
+
+    // If the music library isn't on this page, navigate there first
+    const musicSection = document.querySelector("#music");
+    if (!musicSection) {
+        navigateToPage("index.html#music");
+        // After navigation, wait for library to render then navigate
+        setTimeout(() => navigateToCurrentTrack(), 600);
+        return;
+    }
+
+    // Switch tab to show the right category so the track is visible
+    const isAlbumEP = track.category !== "Singles" && track.category !== "Features";
+    const targetCategory = isAlbumEP ? track.category : track.category; // use the actual category
+
+    const tabs = document.querySelector("#music-tabs");
+    if (tabs) {
+        // Switch to "All" so both singles and album folders are visible
+        const allTab = tabs.querySelector('[data-category="All"]');
+        if (allTab && !allTab.classList.contains("active")) {
+            tabs.querySelectorAll("button").forEach(t => t.classList.remove("active"));
+            allTab.classList.add("active");
+            currentMusicCategory = "All";
+            filterAndRenderMusic();
+        }
+    }
+
+    // Scroll to the music section first
+    musicSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Then after a short delay (for scroll + re-render), locate and highlight the item
+    setTimeout(() => {
+        if (isAlbumEP) {
+            expandFolderForTrack(track);
+        } else {
+            // Scroll to the single card
+            const library = document.querySelector("#music-library");
+            if (!library) return;
+            const card = library.querySelector(`.release-card[data-track-path="${CSS.escape(track.path)}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                // Brief flash highlight
+                card.classList.add("track-highlight-flash");
+                setTimeout(() => card.classList.remove("track-highlight-flash"), 1200);
+            }
+        }
+    }, 350);
 }
 
 
@@ -951,6 +1134,12 @@ function initPlayerControls() {
     const prevBtn = document.querySelector("#player-prev");
     const nextBtn = document.querySelector("#player-next");
     const repeatBtn = document.querySelector("#player-repeat");
+
+    // Clicking the track title navigates to its location in the music library
+    const titleBtn = document.querySelector("#player-title");
+    if (titleBtn) {
+        titleBtn.addEventListener("click", navigateToCurrentTrack);
+    }
 
     if (shuffleBtn) {
         shuffleBtn.addEventListener("click", () => {
