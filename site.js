@@ -604,15 +604,34 @@ async function loadMusicLibrary() {
     setupSearch();
     filterAndRenderMusic();
 
-    // Find the latest drop based on date
-    let latestTrack = tracks[0];
+    // Find the latest drop based on date (excluding future releases based on EST/EDT)
+    let latestTrack = null;
     if (tracks.length > 0) {
-        const sortedByDate = [...tracks].sort((a, b) => {
-            const timeA = a.date ? new Date(a.date).getTime() : 0;
-            const timeB = b.date ? new Date(b.date).getTime() : 0;
-            return timeB - timeA;
+        const getReleaseTimeEST = (dateStr) => {
+            if (!dateStr) return 0;
+            const month = parseInt(dateStr.substring(5, 7), 10);
+            // Eastern Daylight Time (EDT) is UTC-4 (approx. April to October)
+            // Eastern Standard Time (EST) is UTC-5 (approx. November to March)
+            const offset = (month >= 4 && month <= 10) ? "-04:00" : "-05:00";
+            return Date.parse(`${dateStr}T00:00:00${offset}`);
+        };
+
+        const nowTime = new Date().getTime();
+        const releasedTracks = tracks.filter(track => {
+            const releaseTime = getReleaseTimeEST(track.date);
+            return releaseTime <= nowTime;
         });
-        latestTrack = sortedByDate[0];
+
+        if (releasedTracks.length > 0) {
+            const sortedByDate = [...releasedTracks].sort((a, b) => {
+                const timeA = getReleaseTimeEST(a.date);
+                const timeB = getReleaseTimeEST(b.date);
+                return timeB - timeA;
+            });
+            latestTrack = sortedByDate[0];
+        } else {
+            latestTrack = tracks[0];
+        }
     }
     setupFeatured(latestTrack);
 }
@@ -849,9 +868,14 @@ function renderReleaseFolder(group, hasDockedPlayer) {
 function setupFeatured(track) {
     const featuredPlayer = document.querySelector("#featured-player");
     const featuredTitle = document.querySelector("#featured-title");
+    const featuredCover = document.querySelector(".featured-cover");
     if (!featuredPlayer || !track) return;
     featuredPlayer.src = track.audioUrl;
     if (featuredTitle) featuredTitle.textContent = `${track.title} - ${track.artist}`;
+    if (featuredCover && track.coverUrl) {
+        featuredCover.src = track.coverUrl;
+        featuredCover.alt = `${track.title} cover art`;
+    }
 }
 
 function setPlayerTrack(track) {
