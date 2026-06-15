@@ -2444,3 +2444,76 @@ body.has-floating-player {
     }
 }
 
+/* =============================================
+   Nav Countdown Pill
+   ============================================= */
+
+.nav-countdown-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    background: rgba(255, 209, 0, 0.07);
+    border: 1px solid rgba(255, 209, 0, 0.22);
+    border-radius: 20px;
+    padding: 0.3rem 0.9rem 0.3rem 0.75rem;
+    white-space: nowrap;
+    /* Hidden and slightly shifted up by default */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px) scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease, border-color 0.2s ease;
+    /* Take center space between brand and nav */
+    flex: 0 1 auto;
+    margin: 0 auto;
+}
+
+.nav-countdown-pill.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.nav-countdown-pill:hover {
+    background: rgba(255, 209, 0, 0.14);
+    border-color: rgba(255, 209, 0, 0.5);
+}
+
+.nav-cd-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.nav-cd-nums {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ffd100;
+    letter-spacing: 0.04em;
+}
+
+.nav-cd-nums span {
+    display: inline;
+}
+
+/* On small screens: hide the label, keep just the numbers */
+@media (max-width: 640px) {
+    .nav-cd-name {
+        display: none;
+    }
+
+    .nav-countdown-pill {
+        padding: 0.3rem 0.65rem;
+    }
+}
+
+/* On very small screens, hide entirely to avoid header overflow */
+@media (max-width: 400px) {
+    .nav-countdown-pill {
+        display: none;
+    }
+}

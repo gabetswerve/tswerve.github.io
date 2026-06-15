@@ -1175,34 +1175,42 @@ function getTeaserAudioUrl(filename) {
 let countdownInterval = null;
 
 function initCountdown() {
-    const cdSection = document.querySelector("#tswerv3-countdown");
-    if (!cdSection) return;
-
     // Target: September 11, 2026 at 12:00 AM EDT (UTC-4)
     const releaseDate = new Date("2026-09-11T04:00:00Z");
     const now = new Date();
 
-    const daysEl    = document.querySelector("#cd-days");
-    const hoursEl   = document.querySelector("#cd-hours");
-    const minutesEl = document.querySelector("#cd-minutes");
-    const secondsEl = document.querySelector("#cd-seconds");
-    const unitsEl   = document.querySelector("#countdown-units");
+    // ── Nav pill elements (present on every page) ─────────
+    const navPill  = document.querySelector("#nav-countdown-pill");
+    const navDEl   = document.querySelector("#nav-cd-d");
+    const navHEl   = document.querySelector("#nav-cd-h");
+    const navMEl   = document.querySelector("#nav-cd-m");
+    const navSEl   = document.querySelector("#nav-cd-s");
+
+    // ── Main countdown elements (homepage only) ────────────
+    const cdSection  = document.querySelector("#tswerv3-countdown");
+    const daysEl     = document.querySelector("#cd-days");
+    const hoursEl    = document.querySelector("#cd-hours");
+    const minutesEl  = document.querySelector("#cd-minutes");
+    const secondsEl  = document.querySelector("#cd-seconds");
+    const unitsEl    = document.querySelector("#countdown-units");
     const releasedEl = document.querySelector("#countdown-released");
     const playerCard = document.querySelector("#countdown-player-card");
 
-    // If already released, show released state and hide player
+    // If already released — hide everything countdown-related
     if (now >= releaseDate) {
+        if (navPill) navPill.hidden = true;
         if (unitsEl) unitsEl.hidden = true;
         if (releasedEl) releasedEl.hidden = false;
         if (playerCard) playerCard.hidden = true;
         return;
     }
 
-    // Tick function — updates the four countdown cells every second
+    // ── Tick: update both the main timer and the nav pill ──
     function tick() {
         const diff = releaseDate - new Date();
         if (diff <= 0) {
             clearInterval(countdownInterval);
+            if (navPill) navPill.hidden = true;
             if (unitsEl) unitsEl.hidden = true;
             if (releasedEl) releasedEl.hidden = false;
             if (playerCard) playerCard.hidden = true;
@@ -1225,16 +1233,44 @@ function initCountdown() {
             el.textContent = str;
         }
 
+        // Update main countdown (homepage)
         setAndTick(daysEl, d);
         setAndTick(hoursEl, h);
         setAndTick(minutesEl, m);
         setAndTick(secondsEl, s);
+
+        // Update nav pill (all pages)
+        if (navDEl) navDEl.textContent = String(d).padStart(2, "0");
+        if (navHEl) navHEl.textContent = String(h).padStart(2, "0");
+        if (navMEl) navMEl.textContent = String(m).padStart(2, "0");
+        if (navSEl) navSEl.textContent = String(s).padStart(2, "0");
     }
 
     // Clear any existing interval (re-entry from SPA navigation)
     if (countdownInterval) clearInterval(countdownInterval);
     tick();
     countdownInterval = setInterval(tick, 1000);
+
+    // ── Nav pill visibility ────────────────────────────────
+    if (navPill) {
+        if (cdSection) {
+            // Homepage: show pill only when the main countdown section scrolls out of view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navPill.classList.remove("visible");
+                    } else {
+                        navPill.classList.add("visible");
+                    }
+                });
+            }, { threshold: 0.15 });
+            observer.observe(cdSection);
+        } else {
+            // Other pages (EPK, All Links): always show the pill
+            navPill.classList.add("visible");
+        }
+    }
+
 
     // ── Daily Teaser Mini Player ──────────────
     const cdAudio   = document.querySelector("#countdown-audio");
